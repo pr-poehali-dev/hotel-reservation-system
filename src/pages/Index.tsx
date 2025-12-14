@@ -38,6 +38,19 @@ type GalleryImage = {
   title: string;
 };
 
+type Booking = {
+  id: number;
+  roomName: string;
+  roomId: number;
+  guestName: string;
+  guestPhone: string;
+  guestEmail: string;
+  dateFrom: string;
+  dateTo: string;
+  bookingDate: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
+};
+
 const Index = () => {
   const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('home');
@@ -51,6 +64,8 @@ const Index = () => {
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [showBookingsDialog, setShowBookingsDialog] = useState(false);
 
   const [rooms, setRooms] = useState<Room[]>([
     {
@@ -229,6 +244,21 @@ const Index = () => {
       return;
     }
 
+    const newBooking: Booking = {
+      id: bookings.length > 0 ? Math.max(...bookings.map(b => b.id)) + 1 : 1,
+      roomName: selectedRoom.name,
+      roomId: selectedRoom.id,
+      guestName,
+      guestPhone,
+      guestEmail,
+      dateFrom: format(dateFrom, 'yyyy-MM-dd'),
+      dateTo: format(dateTo, 'yyyy-MM-dd'),
+      bookingDate: format(new Date(), 'yyyy-MM-dd HH:mm'),
+      status: 'pending'
+    };
+
+    setBookings([newBooking, ...bookings]);
+
     setRooms(rooms.map(room => 
       room.id === selectedRoom.id 
         ? { ...room, availableRooms: room.availableRooms - 1 }
@@ -246,6 +276,44 @@ const Index = () => {
     setGuestName('');
     setGuestPhone('');
     setGuestEmail('');
+  };
+
+  const updateBookingStatus = (bookingId: number, status: 'pending' | 'confirmed' | 'cancelled') => {
+    setBookings(bookings.map(booking => 
+      booking.id === bookingId ? { ...booking, status } : booking
+    ));
+    
+    if (status === 'cancelled') {
+      const booking = bookings.find(b => b.id === bookingId);
+      if (booking) {
+        setRooms(rooms.map(room => 
+          room.id === booking.roomId 
+            ? { ...room, availableRooms: room.availableRooms + 1 }
+            : room
+        ));
+      }
+    }
+
+    toast({
+      title: 'Статус обновлён',
+      description: `Статус бронирования изменён на "${status === 'confirmed' ? 'Подтверждено' : status === 'cancelled' ? 'Отменено' : 'В ожидании'}"`,
+    });
+  };
+
+  const deleteBooking = (bookingId: number) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (booking && booking.status !== 'cancelled') {
+      setRooms(rooms.map(room => 
+        room.id === booking.roomId 
+          ? { ...room, availableRooms: room.availableRooms + 1 }
+          : room
+      ));
+    }
+    setBookings(bookings.filter(b => b.id !== bookingId));
+    toast({
+      title: 'Бронирование удалено',
+      description: 'Бронирование успешно удалено',
+    });
   };
 
   const scrollToSection = (section: string) => {
@@ -268,10 +336,16 @@ const Index = () => {
               <button onClick={() => scrollToSection('reviews')} className="text-gray-600 hover:text-primary transition">Отзывы</button>
               <button onClick={() => scrollToSection('contacts')} className="text-gray-600 hover:text-primary transition">Контакты</button>
               {isAdmin ? (
-                <Button onClick={handleAdminLogout} variant="default" size="sm">
-                  <Icon name="LogOut" size={16} className="mr-2" />
-                  Выйти
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button onClick={() => setShowBookingsDialog(true)} variant="outline" size="sm">
+                    <Icon name="Calendar" size={16} className="mr-2" />
+                    Брони ({bookings.length})
+                  </Button>
+                  <Button onClick={handleAdminLogout} variant="default" size="sm">
+                    <Icon name="LogOut" size={16} className="mr-2" />
+                    Выйти
+                  </Button>
+                </div>
               ) : (
                 <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
                   <DialogTrigger asChild>
@@ -775,6 +849,98 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <Dialog open={showBookingsDialog} onOpenChange={setShowBookingsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>История бронирований</DialogTitle>
+            <DialogDescription>Всего бронирований: {bookings.length}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {bookings.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Icon name="Calendar" size={48} className="mx-auto mb-4 opacity-50" />
+                <p>Пока нет бронирований</p>
+              </div>
+            ) : (
+              bookings.map(booking => (
+                <Card key={booking.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{booking.roomName}</h3>
+                          <Badge variant={
+                            booking.status === 'confirmed' ? 'default' : 
+                            booking.status === 'cancelled' ? 'destructive' : 
+                            'secondary'
+                          }>
+                            {booking.status === 'confirmed' ? 'Подтверждено' : 
+                             booking.status === 'cancelled' ? 'Отменено' : 
+                             'В ожидании'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Гость:</span>
+                            <p className="font-medium">{booking.guestName}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Телефон:</span>
+                            <p className="font-medium">{booking.guestPhone}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Email:</span>
+                            <p className="font-medium">{booking.guestEmail}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Даты:</span>
+                            <p className="font-medium">
+                              {format(new Date(booking.dateFrom), 'dd.MM.yyyy')} - {format(new Date(booking.dateTo), 'dd.MM.yyyy')}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Забронировано: {booking.bookingDate}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {booking.status === 'pending' && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                          >
+                            <Icon name="Check" size={16} className="mr-1" />
+                            Подтвердить
+                          </Button>
+                        )}
+                        {booking.status !== 'cancelled' && (
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                          >
+                            <Icon name="X" size={16} className="mr-1" />
+                            Отменить
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => deleteBooking(booking.id)}
+                        >
+                          <Icon name="Trash2" size={16} className="mr-1" />
+                          Удалить
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
