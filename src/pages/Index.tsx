@@ -519,17 +519,6 @@ const Index = () => {
         <div className="container mx-auto text-center">
           <h3 className="text-2xl font-bold mb-4">Ocean View Hotel</h3>
           <p className="text-gray-400 mb-6">Роскошный отдых с видом на океан</p>
-          <div className="flex justify-center gap-6">
-            <Button variant="ghost" size="sm" className="text-white hover:text-primary">
-              <Icon name="Facebook" size={20} />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-white hover:text-primary">
-              <Icon name="Instagram" size={20} />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-white hover:text-primary">
-              <Icon name="Twitter" size={20} />
-            </Button>
-          </div>
           <div className="mt-8 text-gray-500 text-sm">
             © 2024 Ocean View Hotel. Все права защищены.
           </div>
