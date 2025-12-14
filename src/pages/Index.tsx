@@ -11,6 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { useToast } from '@/hooks/use-toast';
 
 type Room = {
   id: number;
@@ -36,8 +37,11 @@ type GalleryImage = {
 };
 
 const Index = () => {
+  const { toast } = useToast();
   const [activeSection, setActiveSection] = useState('home');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -116,8 +120,50 @@ const Index = () => {
     }
   ]);
 
+  const handleAdminLogin = () => {
+    if (adminPassword === 'admin123') {
+      setIsAdmin(true);
+      setShowAdminDialog(false);
+      setAdminPassword('');
+      toast({
+        title: 'Вход выполнен',
+        description: 'Добро пожаловать в панель администратора',
+      });
+    } else {
+      toast({
+        title: 'Ошибка входа',
+        description: 'Неверный пароль',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdmin(false);
+    toast({
+      title: 'Выход выполнен',
+      description: 'Вы вышли из панели администратора',
+    });
+  };
+
   const updateRoomPrice = (roomId: number, newPrice: number) => {
     setRooms(rooms.map(room => room.id === roomId ? { ...room, price: newPrice } : room));
+    toast({
+      title: 'Цена обновлена',
+      description: 'Новая цена успешно сохранена',
+    });
+  };
+
+  const updateRoomInfo = (roomId: number, name: string, description: string, amenities: string) => {
+    setRooms(rooms.map(room => 
+      room.id === roomId 
+        ? { ...room, name, description, amenities: amenities.split(',').map(a => a.trim()) } 
+        : room
+    ));
+    toast({
+      title: 'Информация обновлена',
+      description: 'Данные о номере успешно сохранены',
+    });
   };
 
   const deleteGalleryImage = (imageId: number) => {
@@ -131,6 +177,18 @@ const Index = () => {
       title
     };
     setGallery([...gallery, newImage]);
+    toast({
+      title: 'Фото добавлено',
+      description: 'Изображение успешно добавлено в галерею',
+    });
+  };
+
+  const deleteReview = (reviewId: number) => {
+    setReviews(reviews.filter(r => r.id !== reviewId));
+    toast({
+      title: 'Отзыв удалён',
+      description: 'Отзыв успешно удалён',
+    });
   };
 
   const scrollToSection = (section: string) => {
@@ -152,10 +210,42 @@ const Index = () => {
               <button onClick={() => scrollToSection('gallery')} className="text-gray-600 hover:text-primary transition">Галерея</button>
               <button onClick={() => scrollToSection('reviews')} className="text-gray-600 hover:text-primary transition">Отзывы</button>
               <button onClick={() => scrollToSection('contacts')} className="text-gray-600 hover:text-primary transition">Контакты</button>
-              <Button onClick={() => setIsAdmin(!isAdmin)} variant={isAdmin ? 'default' : 'outline'} size="sm">
-                <Icon name="Settings" size={16} className="mr-2" />
-                {isAdmin ? 'Выйти' : 'Админ'}
-              </Button>
+              {isAdmin ? (
+                <Button onClick={handleAdminLogout} variant="default" size="sm">
+                  <Icon name="LogOut" size={16} className="mr-2" />
+                  Выйти
+                </Button>
+              ) : (
+                <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Icon name="Settings" size={16} className="mr-2" />
+                      Админ
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                      <DialogTitle>Вход для администратора</DialogTitle>
+                      <DialogDescription>Введите пароль для доступа к панели управления</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Пароль</Label>
+                        <Input 
+                          type="password" 
+                          placeholder="Введите пароль"
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                        />
+                      </div>
+                      <Button className="w-full" onClick={handleAdminLogin}>
+                        Войти
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
             <Button variant="outline" className="md:hidden">
               <Icon name="Menu" size={24} />
@@ -214,17 +304,52 @@ const Index = () => {
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Изменить цену</DialogTitle>
+                              <DialogTitle>Редактировать номер</DialogTitle>
                             </DialogHeader>
                             <div className="space-y-4">
                               <div>
-                                <Label>Новая цена (₽)</Label>
+                                <Label>Название номера</Label>
                                 <Input 
-                                  type="number" 
-                                  defaultValue={room.price}
-                                  onChange={(e) => updateRoomPrice(room.id, Number(e.target.value))}
+                                  id={`room-name-${room.id}`}
+                                  defaultValue={room.name}
                                 />
                               </div>
+                              <div>
+                                <Label>Описание</Label>
+                                <Textarea 
+                                  id={`room-desc-${room.id}`}
+                                  defaultValue={room.description}
+                                  rows={3}
+                                />
+                              </div>
+                              <div>
+                                <Label>Удобства (через запятую)</Label>
+                                <Input 
+                                  id={`room-amenities-${room.id}`}
+                                  defaultValue={room.amenities.join(', ')}
+                                />
+                              </div>
+                              <div>
+                                <Label>Цена (₽ / ночь)</Label>
+                                <Input 
+                                  id={`room-price-${room.id}`}
+                                  type="number" 
+                                  defaultValue={room.price}
+                                />
+                              </div>
+                              <Button 
+                                className="w-full"
+                                onClick={() => {
+                                  const name = (document.getElementById(`room-name-${room.id}`) as HTMLInputElement).value;
+                                  const description = (document.getElementById(`room-desc-${room.id}`) as HTMLTextAreaElement).value;
+                                  const amenities = (document.getElementById(`room-amenities-${room.id}`) as HTMLInputElement).value;
+                                  const price = Number((document.getElementById(`room-price-${room.id}`) as HTMLInputElement).value);
+                                  updateRoomInfo(room.id, name, description, amenities);
+                                  updateRoomPrice(room.id, price);
+                                }}
+                              >
+                                Сохранить изменения
+                              </Button>
                             </div>
                           </DialogContent>
                         </Dialog>
@@ -427,7 +552,17 @@ const Index = () => {
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               {reviews.map(review => (
-                <Card key={review.id}>
+                <Card key={review.id} className="relative">
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 z-10"
+                      onClick={() => deleteReview(review.id)}
+                    >
+                      <Icon name="Trash2" size={16} className="text-red-500" />
+                    </Button>
+                  )}
                   <CardHeader>
                     <div className="flex items-center justify-between mb-2">
                       <CardTitle className="text-xl">{review.name}</CardTitle>
