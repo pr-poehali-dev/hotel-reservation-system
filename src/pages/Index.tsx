@@ -205,8 +205,8 @@ const Index = () => {
             <h1 className="text-2xl font-bold text-gray-900">Ocean View Hotel</h1>
             <div className="hidden md:flex items-center gap-8">
               <button onClick={() => scrollToSection('home')} className="text-gray-600 hover:text-primary transition">Главная</button>
-              <button onClick={() => scrollToSection('rooms')} className="text-gray-600 hover:text-primary transition">Номера</button>
               <button onClick={() => scrollToSection('about')} className="text-gray-600 hover:text-primary transition">О отеле</button>
+              <button onClick={() => scrollToSection('rooms')} className="text-gray-600 hover:text-primary transition">Номера</button>
               <button onClick={() => scrollToSection('gallery')} className="text-gray-600 hover:text-primary transition">Галерея</button>
               <button onClick={() => scrollToSection('reviews')} className="text-gray-600 hover:text-primary transition">Отзывы</button>
               <button onClick={() => scrollToSection('contacts')} className="text-gray-600 hover:text-primary transition">Контакты</button>
@@ -276,6 +276,49 @@ const Index = () => {
                 Забронировать номер
                 <Icon name="ArrowRight" size={20} className="ml-2" />
               </Button>
+            </div>
+          </div>
+        </section>
+
+        <section id="about" className="py-24 px-4 bg-gray-50">
+          <div className="container mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div>
+                <h2 className="text-4xl md:text-5xl font-bold mb-6">О нашем отеле</h2>
+                <p className="text-lg text-gray-700 mb-6">
+                  Ocean View Hotel — это роскошный отель на берегу океана, где современный дизайн сочетается 
+                  с непревзойдённым сервисом. Мы предлагаем нашим гостям незабываемый отдых в атмосфере 
+                  спокойствия и комфорта.
+                </p>
+                <p className="text-lg text-gray-700 mb-8">
+                  Наш отель оснащён всем необходимым для идеального отпуска: панорамные виды на океан, 
+                  бесконечный бассейн, фитнес-центр, спа-салон и ресторан с изысканной кухней.
+                </p>
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <Icon name="Home" size={32} className="mx-auto mb-2 text-primary" />
+                    <div className="text-3xl font-bold">120</div>
+                    <div className="text-gray-600">Номеров</div>
+                  </div>
+                  <div className="text-center">
+                    <Icon name="Star" size={32} className="mx-auto mb-2 text-primary" />
+                    <div className="text-3xl font-bold">4.9</div>
+                    <div className="text-gray-600">Рейтинг</div>
+                  </div>
+                  <div className="text-center">
+                    <Icon name="Users" size={32} className="mx-auto mb-2 text-primary" />
+                    <div className="text-3xl font-bold">5K+</div>
+                    <div className="text-gray-600">Гостей</div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative h-96 md:h-full min-h-[400px]">
+                <img 
+                  src="https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/93ad0e7e-dbc0-46f9-b952-7c0441f25606.jpg" 
+                  alt="Pool" 
+                  className="w-full h-full object-cover rounded-lg shadow-2xl"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -426,49 +469,6 @@ const Index = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="about" className="py-24 px-4 bg-gray-50">
-          <div className="container mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-4xl md:text-5xl font-bold mb-6">О нашем отеле</h2>
-                <p className="text-lg text-gray-700 mb-6">
-                  Ocean View Hotel — это роскошный отель на берегу океана, где современный дизайн сочетается 
-                  с непревзойдённым сервисом. Мы предлагаем нашим гостям незабываемый отдых в атмосфере 
-                  спокойствия и комфорта.
-                </p>
-                <p className="text-lg text-gray-700 mb-8">
-                  Наш отель оснащён всем необходимым для идеального отпуска: панорамные виды на океан, 
-                  бесконечный бассейн, фитнес-центр, спа-салон и ресторан с изысканной кухней.
-                </p>
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <Icon name="Home" size={32} className="mx-auto mb-2 text-primary" />
-                    <div className="text-3xl font-bold">120</div>
-                    <div className="text-gray-600">Номеров</div>
-                  </div>
-                  <div className="text-center">
-                    <Icon name="Star" size={32} className="mx-auto mb-2 text-primary" />
-                    <div className="text-3xl font-bold">4.9</div>
-                    <div className="text-gray-600">Рейтинг</div>
-                  </div>
-                  <div className="text-center">
-                    <Icon name="Users" size={32} className="mx-auto mb-2 text-primary" />
-                    <div className="text-3xl font-bold">5K+</div>
-                    <div className="text-gray-600">Гостей</div>
-                  </div>
-                </div>
-              </div>
-              <div className="relative h-96 md:h-full min-h-[400px]">
-                <img 
-                  src="https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/93ad0e7e-dbc0-46f9-b952-7c0441f25606.jpg" 
-                  alt="Pool" 
-                  className="w-full h-full object-cover rounded-lg shadow-2xl"
-                />
-              </div>
             </div>
           </div>
         </section>
