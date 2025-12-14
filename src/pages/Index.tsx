@@ -47,6 +47,10 @@ const Index = () => {
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
 
   const [rooms, setRooms] = useState<Room[]>([
     {
@@ -204,6 +208,44 @@ const Index = () => {
       title: 'Отзыв удалён',
       description: 'Отзыв успешно удалён',
     });
+  };
+
+  const handleBooking = () => {
+    if (!selectedRoom || !dateFrom || !dateTo || !guestName || !guestPhone || !guestEmail) {
+      toast({
+        title: 'Ошибка',
+        description: 'Пожалуйста, заполните все поля',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (selectedRoom.availableRooms === 0) {
+      toast({
+        title: 'Ошибка',
+        description: 'К сожалению, свободных мест нет',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setRooms(rooms.map(room => 
+      room.id === selectedRoom.id 
+        ? { ...room, availableRooms: room.availableRooms - 1 }
+        : room
+    ));
+
+    toast({
+      title: 'Бронирование успешно!',
+      description: `Номер "${selectedRoom.name}" забронирован на ${format(dateFrom, 'dd.MM.yyyy')} - ${format(dateTo, 'dd.MM.yyyy')}`,
+    });
+
+    setBookingDialogOpen(false);
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setGuestName('');
+    setGuestPhone('');
+    setGuestEmail('');
   };
 
   const scrollToSection = (section: string) => {
@@ -462,10 +504,13 @@ const Index = () => {
                         <span className="text-3xl font-bold text-primary">{room.price} ₽</span>
                         <span className="text-gray-600"> / ночь</span>
                       </div>
-                      <Dialog>
+                      <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
                         <DialogTrigger asChild>
                           <Button 
-                            onClick={() => setSelectedRoom(room)}
+                            onClick={() => {
+                              setSelectedRoom(room);
+                              setBookingDialogOpen(true);
+                            }}
                             disabled={room.availableRooms === 0}
                           >
                             {room.availableRooms === 0 ? 'Нет мест' : 'Забронировать'}
@@ -507,17 +552,32 @@ const Index = () => {
                             </div>
                             <div>
                               <Label>Имя</Label>
-                              <Input placeholder="Ваше имя" />
+                              <Input 
+                                placeholder="Ваше имя" 
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                              />
                             </div>
                             <div>
                               <Label>Телефон</Label>
-                              <Input placeholder="+7 (999) 999-99-99" />
+                              <Input 
+                                placeholder="+7 (999) 999-99-99"
+                                value={guestPhone}
+                                onChange={(e) => setGuestPhone(e.target.value)}
+                              />
                             </div>
                             <div>
                               <Label>Email</Label>
-                              <Input type="email" placeholder="your@email.com" />
+                              <Input 
+                                type="email" 
+                                placeholder="your@email.com"
+                                value={guestEmail}
+                                onChange={(e) => setGuestEmail(e.target.value)}
+                              />
                             </div>
-                            <Button className="w-full">Подтвердить бронирование</Button>
+                            <Button className="w-full" onClick={handleBooking}>
+                              Подтвердить бронирование
+                            </Button>
                           </div>
                         </DialogContent>
                       </Dialog>
