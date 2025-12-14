@@ -20,6 +20,8 @@ type Room = {
   description: string;
   amenities: string[];
   image: string;
+  availableRooms: number;
+  totalRooms: number;
 };
 
 type Review = {
@@ -53,7 +55,9 @@ const Index = () => {
       price: 5000,
       description: 'Уютный номер с видом на город, оснащённый всем необходимым для комфортного отдыха',
       amenities: ['WiFi', 'Кондиционер', 'Телевизор', 'Мини-бар'],
-      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg'
+      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg',
+      availableRooms: 8,
+      totalRooms: 15
     },
     {
       id: 2,
@@ -61,7 +65,9 @@ const Index = () => {
       price: 12000,
       description: 'Просторный люкс с панорамным видом на океан, королевской кроватью и отдельной гостиной',
       amenities: ['WiFi', 'Кондиционер', 'Телевизор', 'Мини-бар', 'Балкон', 'Джакузи'],
-      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg'
+      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg',
+      availableRooms: 2,
+      totalRooms: 5
     },
     {
       id: 3,
@@ -69,7 +75,9 @@ const Index = () => {
       price: 8000,
       description: 'Идеальный вариант для семейного отдыха с двумя спальнями и просторной гостиной',
       amenities: ['WiFi', 'Кондиционер', '2 Телевизора', 'Мини-бар', 'Кухонный уголок'],
-      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg'
+      image: 'https://cdn.poehali.dev/projects/c4be5185-158e-447f-b038-cc71bdc87296/files/591dd891-448f-4e01-b16e-e36a890b3fd4.jpg',
+      availableRooms: 5,
+      totalRooms: 10
     }
   ]);
 
@@ -154,10 +162,17 @@ const Index = () => {
     });
   };
 
-  const updateRoomInfo = (roomId: number, name: string, description: string, amenities: string) => {
+  const updateRoomInfo = (roomId: number, name: string, description: string, amenities: string, availableRooms?: number, totalRooms?: number) => {
     setRooms(rooms.map(room => 
       room.id === roomId 
-        ? { ...room, name, description, amenities: amenities.split(',').map(a => a.trim()) } 
+        ? { 
+            ...room, 
+            name, 
+            description, 
+            amenities: amenities.split(',').map(a => a.trim()),
+            ...(availableRooms !== undefined && { availableRooms }),
+            ...(totalRooms !== undefined && { totalRooms })
+          } 
         : room
     ));
     toast({
@@ -380,6 +395,26 @@ const Index = () => {
                                   defaultValue={room.price}
                                 />
                               </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Свободно мест</Label>
+                                  <Input 
+                                    id={`room-available-${room.id}`}
+                                    type="number" 
+                                    min="0"
+                                    defaultValue={room.availableRooms}
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Всего мест</Label>
+                                  <Input 
+                                    id={`room-total-${room.id}`}
+                                    type="number" 
+                                    min="1"
+                                    defaultValue={room.totalRooms}
+                                  />
+                                </div>
+                              </div>
                               <Button 
                                 className="w-full"
                                 onClick={() => {
@@ -387,7 +422,9 @@ const Index = () => {
                                   const description = (document.getElementById(`room-desc-${room.id}`) as HTMLTextAreaElement).value;
                                   const amenities = (document.getElementById(`room-amenities-${room.id}`) as HTMLInputElement).value;
                                   const price = Number((document.getElementById(`room-price-${room.id}`) as HTMLInputElement).value);
-                                  updateRoomInfo(room.id, name, description, amenities);
+                                  const availableRooms = Number((document.getElementById(`room-available-${room.id}`) as HTMLInputElement).value);
+                                  const totalRooms = Number((document.getElementById(`room-total-${room.id}`) as HTMLInputElement).value);
+                                  updateRoomInfo(room.id, name, description, amenities, availableRooms, totalRooms);
                                   updateRoomPrice(room.id, price);
                                 }}
                               >
@@ -406,6 +443,20 @@ const Index = () => {
                         <Badge key={idx} variant="secondary">{amenity}</Badge>
                       ))}
                     </div>
+                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Свободно мест:</span>
+                        <span className={`font-semibold ${room.availableRooms <= 3 ? 'text-red-600' : 'text-green-600'}`}>
+                          {room.availableRooms} из {room.totalRooms}
+                        </span>
+                      </div>
+                      {room.availableRooms <= 3 && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
+                          <Icon name="AlertCircle" size={14} />
+                          <span>Осталось мало мест!</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-3xl font-bold text-primary">{room.price} ₽</span>
@@ -413,7 +464,12 @@ const Index = () => {
                       </div>
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button onClick={() => setSelectedRoom(room)}>Забронировать</Button>
+                          <Button 
+                            onClick={() => setSelectedRoom(room)}
+                            disabled={room.availableRooms === 0}
+                          >
+                            {room.availableRooms === 0 ? 'Нет мест' : 'Забронировать'}
+                          </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md">
                           <DialogHeader>
